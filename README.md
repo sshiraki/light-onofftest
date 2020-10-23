@@ -13,19 +13,45 @@ firestoreで状態管理することを前提とした、通知を音と点滅�
  - オフタイマーを設定し、チェックボックスにチェックがあればその時刻に消灯する。
 
 ## Getting Started
+### Client
 
- - node install onoff
- - node install node-wav-player
- - node install firebase-admin
+ - Install node.js
+ - npm install --save firebase
+ - npm install firebase-admin
+ - npm install onoff
+ - npm install node-wav-player
+ - git clone https://github.com/sshiraki/light-onofftest.git
+ - <firebase config> -> ./credentials/serviceAccount.json
  - node lightswitch.js
+
+### Server
+
+ - Install node.js
+ - npm install -g firebase-tools
+ - create firestore database
+   collection
+     test
+       light
+         value <<boolean>>
+         timestamp <<timestamp>>
+       timer
+         on
+           enabled <<boolean>>
+           time <<string>>
+         off
+           enabled <<boolean>>
+           time <<string>>
+         timestamp <<timestamp>>
+ - git clone https://github.com/sshiraki/light-onofftest_fb.git
+ - edit index.html -> var config = <firebase config>
+ - firebase deploy
 
 ## Update 
  
  - realtime db -> firestore
+ - add sound
  
 ## サウンド
 ニコニコモンズ
- - パトカー
-   https://commons.nicovideo.jp/material/nc131801
  - ドアチャイム
    https://commons.nicovideo.jp/material/nc227217
