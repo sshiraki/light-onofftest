@@ -1,5 +1,4 @@
 // setup
-//const player = require('play-sound')();
 const player = require('node-wav-player');
 const admin = require("firebase-admin");
 const serviceAccount = require("./credentials/serviceAccount.json");
@@ -7,7 +6,6 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`
 });
-//firestore.settings({timestampsInSnapshots: true})
 const db = admin.firestore();
 db.settings({timestampsInSnapshots: true});
 
@@ -37,19 +35,6 @@ function ledOff() {
   //led.unexport(); // GPIOポートを解放
 };
 
-// サウンド再生
-//function playSound(path) {
-//  return new Promise((resolve, reject) => {
-//    player.play({path: path}).then(() => {
-//      resolve();
-//    }).catch((error) => {
-//      console.error(error);
-//      reject(error);
-//    });
-//  });
-//}
-
-
 //wavファイル再生関数定義
 const play = async (sound) => {
   await player.play({
@@ -70,11 +55,6 @@ db.collection('test').doc('light').onSnapshot(snapshot => {
   if (snapshot.data().value) {
     ledOn();
     play('./sounds/nc227217.wav');
-    //player.play('./sounds/nc131801.wav', err => {
-    //  if (err) throw err
-    //  console.log('sound error!!');
-    //});
-    //playSound('./sounds/nc131801.wav');
     console.log('light on');
   } else {
     ledOff();
