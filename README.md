@@ -29,6 +29,7 @@ firestoreで状態管理することを前提とした、通知を音と点滅�
  - Install node.js
  - npm install -g firebase-tools
  - create firestore database
+ ```
    collection
      test
        light
@@ -42,6 +43,7 @@ firestoreで状態管理することを前提とした、通知を音と点滅�
            enabled <<boolean>>
            time <<string>>
          timestamp <<timestamp>>
+ ```
  - git clone https://github.com/sshiraki/light-onofftest_fb.git
  - edit index.html -> var config = <firebase config>
  - firebase deploy
