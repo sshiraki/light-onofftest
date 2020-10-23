@@ -57,3 +57,6 @@ functions/templates/index.html
 /.firebaserc
 src/config/firebase.js #Obsolete
 src/config/project.js
+
+# backup
+*_bk*.*

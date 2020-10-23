@@ -1,3 +1,15 @@
+// setup
+//const player = require('play-sound')();
+const player = require('node-wav-player');
+const admin = require("firebase-admin");
+const serviceAccount = require("./credentials/serviceAccount.json");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`
+});
+//firestore.settings({timestampsInSnapshots: true})
+const db = admin.firestore();
+db.settings({timestampsInSnapshots: true});
 
 var Gpio = require('onoff').Gpio,
 led = new Gpio(14, 'out'),
@@ -9,12 +21,12 @@ function ledOn() {
   // 1秒点滅
   iv = setInterval(function(){
     led.writeSync(led.readSync() === 0 ? 1 : 0)
-  }, 1000);
+  }, 500);
   setTimeout(_ => {
     clearInterval(iv); // 点滅LEDをストップ
     led.writeSync(0); // LEDをOFF
-    //led.unexport(); // GPIOポートを解放
-  }, 10000)
+  //  led.unexport(); // GPIOポートを解放
+  }, 5000)
 };
 
 // LEDをOFF
@@ -25,21 +37,51 @@ function ledOff() {
   //led.unexport(); // GPIOポートを解放
 };
 
-var firebase = require("firebase");
-var config = { databaseURL: "https://test-913f7.firebaseio.com" };
-firebase.initializeApp(config);
+// サウンド再生
+//function playSound(path) {
+//  return new Promise((resolve, reject) => {
+//    player.play({path: path}).then(() => {
+//      resolve();
+//    }).catch((error) => {
+//      console.error(error);
+//      reject(error);
+//    });
+//  });
+//}
 
-var execSync = require('child_process').execSync;
 
-firebase.database().ref('/light').on('value', function(snapshot) {
-  console.log('/light: ' + JSON.stringify(snapshot.val()));
-  if (snapshot.val().value) {
+//wavファイル再生関数定義
+const play = async (sound) => {
+  await player.play({
+    path: `${sound}`,
+    sync: true
+  }).then(() => {
+    console.log(`played ${sound}`);
+  }).catch((error) => {
+    console.log('sound error!!');
+    console.error(error);
+  });
+}
+
+db.collection('test').doc('light').onSnapshot(snapshot => {
+  // JSONを文字列に変換
+  console.log('/test/value: ' + JSON.stringify(snapshot.data()));
+
+  if (snapshot.data().value) {
     ledOn();
+    play('./sounds/nc227217.wav');
+    //player.play('./sounds/nc131801.wav', err => {
+    //  if (err) throw err
+    //  console.log('sound error!!');
+    //});
+    //playSound('./sounds/nc131801.wav');
     console.log('light on');
   } else {
     ledOff();
     console.log('light off');
   }
+}, error => {
+  console.log("Error getting document:", error);
 });
 
 var onTimerInfo = {enabled: false};
@@ -49,30 +91,33 @@ function fireOnTimer() {
   ledOn;
   console.log('fireOnTimer');
   onTimerInfo.timeoutID =
-      setTimeout(_ => { fireOnTimer(); },
-                 getDiffTimeMiliSec(onTimerInfo.time, new Date()));
+    setTimeout(_ => { fireOnTimer(); },
+      getDiffTimeMiliSec(onTimerInfo.time, new Date())
+    );
 }
 function fireOffTimer() {
   ledOff;
   console.log('fireOffTimer');
   offTimerInfo.timeoutID =
-      setTimeout(_ => { fireOffTimer(); },
-                 getDiffTimeMiliSec(offTimerInfo.time, new Date()));
+    setTimeout(_ => { fireOffTimer(); },
+      getDiffTimeMiliSec(offTimerInfo.time, new Date())
+    );
 }
 
 function getDiffTimeMiliSec(timeString, nowDate) {
   var time = (parseInt(timeString.substring(0, 2)) * 60 +
-              parseInt(timeString.substring(3, 5))) * 60;
+    parseInt(timeString.substring(3, 5))) * 60;
   var nowTime = (nowDate.getHours() * 60 + nowDate.getMinutes()) * 60 +
-                nowDate.getSeconds();
+    nowDate.getSeconds();
   if (time > nowTime)
     return (time - nowTime) * 1000;
   return (time + 24 * 60 * 60 - nowTime) * 1000;
 }
 
-firebase.database().ref('/timer').on('value', function(snapshot) {
-  console.log('/timer: ' + JSON.stringify(snapshot.val()));
-  var timer = snapshot.val();
+db.collection('test').doc('timer').onSnapshot((snapshot) => {
+  // JSONを文字列に変換
+  console.log('/test/timer: ' + JSON.stringify(snapshot.data()));
+  var timer = snapshot.data();
   if (!timer)
     return;
   if (onTimerInfo.enabled) {
@@ -83,6 +128,8 @@ firebase.database().ref('/timer').on('value', function(snapshot) {
     clearTimeout(offTimerInfo.timeoutID);
     offTimerInfo.enabled = false;
   }
+  console.log('timer.on.time: ' + JSON.stringify(timer.on.time));
+  console.log('timer.off.time: ' + JSON.stringify(timer.off.time));
   if (timer.on && timer.on.enabled && timer.on.time) {
     onTimerInfo.enabled = true;
     onTimerInfo.time = timer.on.time;
@@ -95,6 +142,6 @@ firebase.database().ref('/timer').on('value', function(snapshot) {
     offTimerInfo.time = timer.off.time;
     offTimerInfo.timeoutID =
         setTimeout(_ => { fireOffTimer(); },
-                   getDiffTimeMiliSec(offTimerInfo.time, new Date()));
+          getDiffTimeMiliSec(offTimerInfo.time, new Date()));
   }
 });
